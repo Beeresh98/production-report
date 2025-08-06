@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hourly Report Entry</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Hourly Production Report</h1>
+        <form id="reportForm">
+            <label for="opertaor">Operator:</label>
+            <input type="text" id="opertaor" name="opertaor" required>
+
+            <label for="rollWidth">Roll Width (mm):</label>
+            <input type="number" id="rollWidth" name="rollWidth" required>
+
+            <label for="rollMicron">Roll Micron:</label>
+            <input type="number" id="rollMicron" name="rollMicron" required>
+
+            <label for="meter">Meter:</label>
+            <input type="number" id="meter" name="meter" required>
+
+            <label for="weight">Weight (kg):</label>
+            <input type="number" step="0.01" id="weight" name="weight" required>
+
+            <label for="totalRolls">Total Rolls:</label>
+            <input type="number" id="totalRolls" name="totalRolls" required>
+
+            <label for="notes">Notes (Optional):</label>
+            <textarea id="notes" name="notes" rows="3"></textarea>
+
+            <button type="submit" id="submitButton">Submit Report</button>
+            <p id="statusMessage"></p>
+        </form>
+
+        <hr>
+
+        <h2>Recent Reports</h2>
+        <button id="refreshButton">Refresh Data</button>
+        <div id="dataTable" class="table-container">
+            <p>Loading reports...</p>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
