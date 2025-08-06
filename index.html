@@ -3,46 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hourly Report Entry</title>
+    <title>Aarya PlantOS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Hourly Production Report</h1>
-        <form id="reportForm">
-            <label for="opertaor">Operator:</label>
-            <input type="text" id="opertaor" name="opertaor" required>
-
-            <label for="rollWidth">Roll Width (mm):</label>
-            <input type="number" id="rollWidth" name="rollWidth" required>
-
-            <label for="rollMicron">Roll Micron:</label>
-            <input type="number" id="rollMicron" name="rollMicron" required>
-
-            <label for="meter">Meter:</label>
-            <input type="number" id="meter" name="meter" required>
-
-            <label for="weight">Weight (kg):</label>
-            <input type="number" step="0.01" id="weight" name="weight" required>
-
-            <label for="totalRolls">Total Rolls:</label>
-            <input type="number" id="totalRolls" name="totalRolls" required>
-
-            <label for="notes">Notes (Optional):</label>
-            <textarea id="notes" name="notes" rows="3"></textarea>
-
-            <button type="submit" id="submitButton">Submit Report</button>
-            <p id="statusMessage"></p>
-        </form>
-
-        <hr>
-
-        <h2>Recent Reports</h2>
-        <button id="refreshButton">Refresh Data</button>
-        <div id="dataTable" class="table-container">
-            <p>Loading reports...</p>
+    <div class="app-container">
+        <div id="shiftSetupScreen" class="screen">
+            <header class="app-header">
+                <h1>Aarya OpsLink</h1>
+                <p>Start Shift & Mark Attendance</p>
+            </header>
+            <div class="card">
+                <div class="form-group">
+                    <label for="operatorSelect">Select Operator</label>
+                    <select id="operatorSelect"></select>
+                </div>
+                <div class="form-group">
+                    <label for="helpersSelect">Select Helpers (Hold Ctrl/Cmd to select multiple)</label>
+                    <select id="helpersSelect" multiple></select>
+                </div>
+                <button id="startShiftButton" class="btn btn-primary">Confirm and Start Shift</button>
+            </div>
         </div>
-    </div>
-    <script src="script.js"></script>
-</body>
-</html>
+
+        <div id="mainAppScreen" class="screen hidden">
+            <header class="app-header main-header">
+                <h1>Hourly Report</h1>
+                <div class="shift-info">
+                    <p>Operator: <strong id="currentOperator"></strong></p>
+                    <button id="endShiftButton" class="btn btn-danger">End Shift & Logout</button>
+                </div>
+            </header>
+            
+            <div class="card">
+                <form id="reportForm">
+                    <label for="rollWidth">Roll Width (mm)</label>
+                    <input type="number" id="rollWidth" name="rollWidth" required>
+
+                    <label for="rollMicron">Roll Micron</label>
+                    <input type="number" id="rollMicron" name="rollMicron" required>
+
+                    <label for="meter">Meter</label>
+                    <input type="number" id="meter" name="meter" required>
+
+                    <label for="weight">Weight (kg)</label>
+                    <input type="number" step="0.01" id="weight" name="weight" required>
+
+                    <label for="totalRolls">Total Rolls</label>
+                    <input type="number" id="totalRolls" name="totalRolls" required>
+
+                    <label for="notes">Notes (Optional)</label>
+                    <textarea id="notes" name="notes" rows="3"></textarea>
+
+                    <button type="submit" id="submitReportButton" class="btn btn-primary">Submit Hourly Report</button>
+                    <p id="statusMessage"></p>
+                </form>
+            </div>
+
+            <h2 class="section-title">Recent Reports</h2>
+            <div class="card">
+                <button id="refreshButton" class="btn btn-secondary">Refresh Data</button>
+                <div id="dataTable" class="table-container"></div>
+            </div>
+        </div>
+        
+        <div id="shiftEndedScreen" class="screen hidden">
+            <header class="app-header">
+                <h1>Shift Ended</h1>
+            </header>
+            <div class="card">
+                <p>You have been successfully logged out. Thank you
