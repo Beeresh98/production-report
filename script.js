@@ -184,4 +184,5 @@ ui.refreshButton.addEventListener('click', async () => {
 });
 
 // --- START THE APP ---
+
 document.addEventListener('DOMContentLoaded', initialize);
