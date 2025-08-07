@@ -206,13 +206,4 @@ ui.refreshButton.addEventListener('click', async () => {
     }
 });
 
-ui.startNewShiftButton.addEventListener('click', () => {
-  window.location.reload();
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-  initialize();
-  setWelcomeMessage();
-  setInterval(updateClock, 1000);
-  updateClock();
-});
+ui.startNewShiftButton.addEventListener('click
