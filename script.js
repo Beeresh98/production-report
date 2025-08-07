@@ -1,21 +1,13 @@
-// !!! IMPORTANT: PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE !!!
 const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwVvTSZ0G0IAW4QmaPngUuvKGXTBdLsZLQNZcsEXBnn-cEQoifLnHLMJ0Pf2VqhfDqmCg/exec';
 
-// App State: A simple object to hold session data
-const state = {
-  operator: null,
-  helpers: [],
-  logIds: [],
-};
+const state = { operator: null, helpers: [], logIds: [] };
 
-// Screen Elements: References to the different screen divs
 const screens = {
   setup: document.getElementById('shiftSetupScreen'),
   main: document.getElementById('mainAppScreen'),
   ended: document.getElementById('shiftEndedScreen'),
 };
 
-// UI Elements: References to all interactive elements
 const ui = {
   operatorSelect: document.getElementById('operatorSelect'),
   helpersSelect: document.getElementById('helpersSelect'),
@@ -27,13 +19,21 @@ const ui = {
   statusMessage: document.getElementById('statusMessage'),
   dataTable: document.getElementById('dataTable'),
   refreshButton: document.getElementById('refreshButton'),
+  welcomeMessage: document.getElementById('welcomeMessage'),
+  clock: document.getElementById('clock'),
+  startNewShiftButton: document.getElementById('startNewShiftButton'),
+  redirectMessage: document.getElementById('redirectMessage'),
 };
 
-// --- CORE FUNCTIONS ---
+const helpersChoices = new Choices(ui.helpersSelect, {
+  removeItemButton: true,
+  placeholder: true,
+  placeholderValue: 'Click to add helpers...',
+});
 
-// A single function to communicate with our Google Apps Script backend
 async function apiCall(action, data = {}) {
-  ui.submitReportButton.disabled = true; // Disable button during API call
+  const btn = action === 'addReport' ? ui.submitReportButton : ui.startShiftButton;
+  if(btn) btn.disabled = true;
   try {
     const response = await fetch(WEB_APP_URL, {
       method: 'POST',
@@ -44,41 +44,46 @@ async function apiCall(action, data = {}) {
     if (result.result === "Error") throw new Error(result.message);
     return result;
   } finally {
-    ui.submitReportButton.disabled = false; // Re-enable button
+    if(btn) btn.disabled = false;
   }
 }
 
-// Initialize the application when the page first loads
 async function initialize() {
-  try {
-    const response = await fetch(WEB_APP_URL);
-    const data = await response.json();
-    if(data.error) throw new Error(data.error);
-    
-    populateEmployeeDropdowns(data.employees);
-    updateReportsTable(data.reports);
-  } catch (error) {
-    alert("Fatal Error: Could not load initial application data. " + error.message);
+  const savedState = localStorage.getItem('aaryaOpsLinkShiftState');
+  if (savedState) {
+    Object.assign(state, JSON.parse(savedState));
+    ui.currentOperator.textContent = state.operator.name;
+    switchScreen('main');
+    const newData = await fetch(WEB_APP_URL).then(res => res.json());
+    updateReportsTable(newData.reports);
+  } else {
+    try {
+      const response = await fetch(WEB_APP_URL);
+      const data = await response.json();
+      if(data.error) throw new Error(data.error);
+      populateEmployeeDropdowns(data.employees);
+      updateReportsTable(data.reports);
+    } catch (error) {
+      alert("Fatal Error: Could not load initial application data. " + error.message);
+    }
   }
 }
 
-// Fills the operator and helper dropdowns from the employee list
 function populateEmployeeDropdowns(employees) {
-  // Clear existing options
-  ui.operatorSelect.innerHTML = '<option value="" disabled selected>-- Select Name --</option>';
-  ui.helpersSelect.innerHTML = '';
-  
+  const operatorOptions = [{ value: '', label: '-- Select Name --', disabled: true, selected: true }];
+  const helperOptions = [];
   employees.forEach(emp => {
-    const option = new Option(emp.name, JSON.stringify(emp));
+    const option = { value: JSON.stringify(emp), label: emp.name };
     if (emp.role === 'Operator') {
-      ui.operatorSelect.add(option);
+      operatorOptions.push(option);
     } else if (emp.role === 'Helper') {
-      ui.helpersSelect.add(option);
+      helperOptions.push(option);
     }
   });
+  ui.operatorSelect.innerHTML = operatorOptions.map(o => `<option value='${o.value}' ${o.disabled ? 'disabled' : ''} ${o.selected ? 'selected' : ''}>${o.label}</option>`).join('');
+  helpersChoices.setChoices(helperOptions, 'value', 'label', true);
 }
 
-// Builds and displays the table of recent reports
 function updateReportsTable(reports) {
     if (!reports || reports.length === 0) {
         ui.dataTable.innerHTML = "<p>No production reports have been submitted yet.</p>";
@@ -93,42 +98,63 @@ function updateReportsTable(reports) {
     ui.dataTable.innerHTML = tableHtml;
 }
 
-// Simple function to switch between the visible screens
 function switchScreen(screenName) {
   Object.values(screens).forEach(s => s.classList.add('hidden'));
   screens[screenName].classList.remove('hidden');
 }
 
+function updateClock() {
+  const now = new Date();
+  const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const dateString = now.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  ui.clock.textContent = `${dateString} | ${timeString}`;
+}
 
-// --- EVENT HANDLERS ---
+function setWelcomeMessage() {
+  const hour = new Date().getHours();
+  let greeting = 'Welcome';
+  if (hour >= 4 && hour < 12) greeting = 'Good Morning';
+  else if (hour >= 12 && hour < 18) greeting = 'Good Afternoon';
+  else greeting = 'Good Evening';
+  ui.welcomeMessage.textContent = greeting;
+}
 
-// When the "Confirm and Start Shift" button is clicked
+function startRedirectTimer() {
+  let seconds = 5;
+  ui.redirectMessage.textContent = `Restarting in ${seconds} seconds...`;
+  const interval = setInterval(() => {
+    seconds--;
+    ui.redirectMessage.textContent = `Restarting in ${seconds} seconds...`;
+    if (seconds <= 0) {
+      clearInterval(interval);
+      window.location.reload();
+    }
+  }, 1000);
+}
+
 ui.startShiftButton.addEventListener('click', async () => {
   if (!ui.operatorSelect.value) {
     alert("Please select an operator to start the shift.");
     return;
   }
   const selectedOperator = JSON.parse(ui.operatorSelect.value);
-  const selectedHelpers = [...ui.helpersSelect.selectedOptions].map(opt => JSON.parse(opt.value));
+  const selectedHelpers = helpersChoices.getValue(true).map(val => JSON.parse(val));
   
-  ui.startShiftButton.disabled = true;
   ui.startShiftButton.textContent = "Starting...";
-
   try {
     const result = await apiCall('startShift', { operator: selectedOperator, helpers: selectedHelpers });
     state.operator = selectedOperator;
     state.logIds = result.logIds;
+    localStorage.setItem('aaryaOpsLinkShiftState', JSON.stringify(state));
     ui.currentOperator.textContent = state.operator.name;
     switchScreen('main');
   } catch (error) {
     alert("Error starting shift: " + error.message);
   } finally {
-    ui.startShiftButton.disabled = false;
     ui.startShiftButton.textContent = "Confirm and Start Shift";
   }
 });
 
-// When the hourly production report form is submitted
 ui.reportForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   ui.submitReportButton.textContent = "Submitting...";
@@ -136,7 +162,6 @@ ui.reportForm.addEventListener('submit', async (e) => {
   const formData = new FormData(ui.reportForm);
   const data = Object.fromEntries(formData.entries());
   data.operatorName = state.operator.name;
-
   try {
     await apiCall('addReport', data);
     ui.statusMessage.textContent = "Report submitted successfully!";
@@ -152,17 +177,16 @@ ui.reportForm.addEventListener('submit', async (e) => {
   }
 });
 
-// When the "End Shift" button is clicked
 ui.endShiftButton.addEventListener('click', async () => {
   const confirmed = confirm("Are you sure you want to end your shift? This action cannot be undone.");
   if (!confirmed) return;
-
   ui.endShiftButton.disabled = true;
   ui.endShiftButton.textContent = "Ending Shift...";
-
   try {
     await apiCall('endShift', { logIds: state.logIds });
+    localStorage.removeItem('aaryaOpsLinkShiftState');
     switchScreen('ended');
+    startRedirectTimer();
   } catch (error) {
     alert("Error ending shift: " + error.message);
     ui.endShiftButton.disabled = false;
@@ -170,7 +194,6 @@ ui.endShiftButton.addEventListener('click', async () => {
   }
 });
 
-// When the "Refresh Data" button is clicked
 ui.refreshButton.addEventListener('click', async () => {
     ui.refreshButton.textContent = "Refreshing...";
     try {
@@ -183,5 +206,13 @@ ui.refreshButton.addEventListener('click', async () => {
     }
 });
 
-// --- START THE APP ---
-document.addEventListener('DOMContentLoaded', initialize);
+ui.startNewShiftButton.addEventListener('click', () => {
+  window.location.reload();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  initialize();
+  setWelcomeMessage();
+  setInterval(updateClock, 1000);
+  updateClock();
+});

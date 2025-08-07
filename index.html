@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aarya PlantOS</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js" defer></script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
@@ -13,16 +17,18 @@
     <div class="app-container">
         <div id="shiftSetupScreen" class="screen">
             <header class="app-header">
-                <h1>Aarya PlantOS</h1>
-                <p>Start Shift & Mark Attendance</p>
+                <div class="header-logo">Aarya PlantOS</div>
+                <h1 id="welcomeMessage">Welcome</h1>
+                <p id="clock" class="clock"></p>
             </header>
             <div class="card">
+                <p class="card-title">Start Shift & Mark Attendance</p>
                 <div class="form-group">
                     <label for="operatorSelect">Select Operator</label>
                     <select id="operatorSelect"></select>
                 </div>
                 <div class="form-group">
-                    <label for="helpersSelect">Select Helpers (Hold Ctrl/Cmd to select multiple)</label>
+                    <label for="helpersSelect">Select Helpers</label>
                     <select id="helpersSelect" multiple></select>
                 </div>
                 <button id="startShiftButton" class="btn btn-primary">Confirm and Start Shift</button>
@@ -30,7 +36,7 @@
         </div>
 
         <div id="mainAppScreen" class="screen hidden">
-            <header class="app-header main-header">
+             <header class="app-header main-header">
                 <h1>Hourly Report</h1>
                 <div class="shift-info">
                     <p>Operator: <strong id="currentOperator"></strong></p>
@@ -42,22 +48,16 @@
                 <form id="reportForm">
                     <label for="rollWidth">Roll Width (mm)</label>
                     <input type="number" id="rollWidth" name="rollWidth" required>
-
                     <label for="rollMicron">Roll Micron</label>
                     <input type="number" id="rollMicron" name="rollMicron" required>
-
                     <label for="meter">Meter</label>
                     <input type="number" id="meter" name="meter" required>
-
                     <label for="weight">Weight (kg)</label>
                     <input type="number" step="0.01" id="weight" name="weight" required>
-
                     <label for="totalRolls">Total Rolls</label>
                     <input type="number" id="totalRolls" name="totalRolls" required>
-
                     <label for="notes">Notes (Optional)</label>
                     <textarea id="notes" name="notes" rows="3"></textarea>
-
                     <button type="submit" id="submitReportButton" class="btn btn-primary">Submit Hourly Report</button>
                     <p id="statusMessage"></p>
                 </form>
@@ -76,13 +76,13 @@
             </header>
             <div class="card">
                 <p>You have been successfully logged out. Thank you!</p>
-                <p>You can now close this window.</p>
+                <button id="startNewShiftButton" class="btn btn-primary">Start New Shift</button>
+                <p id="redirectMessage" class="redirect-message"></p>
             </div>
         </div>
-    </div>
-    
-    <!-- THIS LINE WAS MISSING. IT IS THE MOST IMPORTANT LINE. -->
-    <script src="script.js"></script>
 
+        <img src="logo.png" class="logo-background" alt="Aarya Logo">
+    </div>
+    <script src="script.js"></script>
 </body>
 </html>
